@@ -142,7 +142,7 @@ if(__name__ == '__main__'):
     ftp = FTPThread(int(config['ftp-port']))
     ftp.start()
 
-    webbrowser.open("http://127.0.0.1:{}".format(config['http-port']))
+    #webbrowser.open("http://127.0.0.1:{}".format(config['http-port']))
     print("Running HTTP Server....")
     server.serve_forever()
     print("Server Terminated, Bye !")
