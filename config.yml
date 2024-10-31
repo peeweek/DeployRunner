@@ -1,0 +1,3 @@
+app-name : "Deploy Runner"
+http-port : 8017
+ftp-port: 8021

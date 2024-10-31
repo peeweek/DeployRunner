@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ config['app-name'] }}</title>
+</head>
+<body style="font-family: arial, sans-serif, helvetica; ">
+<script>
+    function request()
+    {
+        var folder = document.getElementById("folderRequest").value;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               // Typical action to be performed when the document is ready:
+               document.getElementById("credentials").innerHTML = xhttp.responseText;
+               refresh();
+            }
+        };
+        xhttp.open("GET", "request="+folder, true);
+        xhttp.send();
+    }
+
+
+    function refresh()
+    {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               // Typical action to be performed when the document is ready:
+               document.getElementById("runnerTables").innerHTML = xhttp.responseText;
+            }
+        };
+        xhttp.open("GET", "refresh", true);
+        xhttp.send();
+    }
+
+    function run(name)
+    {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               refresh()
+                displayMessage("Running Build : " + name + " !")
+            }
+        };
+        xhttp.open("GET", "execute="+name, true);
+        xhttp.send();
+    }
+
+    function deleteBuild(name)
+    {
+        if(!confirm("Do you really want to delete the build : '"+name+"' ?"))
+            return;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               refresh()
+                displayMessage("Successfully deleted Build : " + name + " !")
+            }
+        };
+        xhttp.open("GET", "delete="+name, true);
+        displayMessage("Deleting Build : " + name + " ... Please wait")
+        xhttp.send();
+    }
+
+    function displayMessage(text)
+    {
+        document.getElementById("message").innerHTML = text;
+    }
+
+</script>
+<h1>{{ config['app-name'] }}</h1>
+
+<div style="border : none; background-color : #EEE;  border-radius: 8px; margin:8px; padding: 8px; width: 400px;">
+   Request Folder:<input type="text" id="folderRequest" value="toto"/><br/>
+    <button onclick="request()">Request</button><br/>
+    <div style="border : solid 1px black; border-radius: 8px; margin:8px; padding: 8px; ">
+        <span id="credentials"></span>
+    </div>
+</div>
+<br/>
+<span id="message"></span>
+<br/>
+<div style="border : none; background-color : #EEE; border-radius: 8px; margin:8px; padding: 8px; width: 400px;">
+    <button onclick="refresh()">Refresh</button><br/>
+</div>
+<div id="runnerTables">
+
+</div>
+
+</body>
+<script defer>
+    refresh();
+</script>
+</html>

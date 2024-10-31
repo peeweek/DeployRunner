@@ -1,0 +1,27 @@
+<table style="border: black 1px solid; width: 800px; font-size:12px;">
+  <tr style="text-align:left; background-color:#EEE; margin: 0px;">
+    <th style="width: 200px;">Name</th>
+    <th>Description</th>
+    <th style="width: 100px;">Executable</th>
+    <th style="width: 90px;">Actions</th>
+  </tr>
+  {% for item in data %}
+  <tr>
+    <td>{{item['name']}}</td>
+    <td>{{item['description']}}</td>
+    <td>
+      {% if 'executable' in item %}
+      {{item['executable']}}
+      {% else %}
+      (No Executable)
+      {% endif%}
+    </td>
+    <td>
+      {% if 'executable' in item %}
+      <button onclick="run('{{item['name']}}')">▶</button>
+      {% endif%}
+      <button onclick="deleteBuild('{{item['name']}}')">Delete</button>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
