@@ -10,6 +10,10 @@ from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 
+root = os.path.join(os.path.curdir,'data')
+if not os.path.isdir(root):
+    os.makedirs(root)
+
 class FTPThread(threading.Thread):
     def __init__(self, port : int):
        self.authorizer = DummyAuthorizer()
@@ -27,9 +31,10 @@ class FTPThread(threading.Thread):
        print("FTP Started !")
        self.server.serve_forever()
 
-    def stopSever(self):
+    def stopServer(self):
         print("Stopping FTP Server")
         self.server.close_all()
+        self.join()
 
 def randomShortStr():
     return str(uuid.uuid4()).split("-")[0]
@@ -69,6 +74,7 @@ def runBuild(dir:str, executable:str):
     return
 
 config = None
+
 with open("config.yml", encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
 
