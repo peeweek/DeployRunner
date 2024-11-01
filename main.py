@@ -1,4 +1,4 @@
-import os, io, sys, yaml, threading, subprocess, time, socket
+import os, io, sys, yaml, threading, subprocess, time, socket, datetime
 import shutil
 import uuid
 
@@ -38,10 +38,8 @@ class FTPThread(threading.Thread):
         self.join()
 
 def randomShortStr():
-    return str(uuid.uuid4()).split("-")[0]
+    return datetime.datetime.now().strftime("%y%m%d-%H%M%S")
 
-def randomLongStr():
-    return str(uuid.uuid4())
 
 def readfile(path : str):
     if os.path.isfile(path):
@@ -68,10 +66,10 @@ def reserve_dir(dir : str):
 process = None
 
 def runBuild(dir:str, executable:str):
-    path = os.path.join(dir, executable)
-    print("Trying to run build: {}".format(path))
-    if (os.path.isfile(path)):
-        process = subprocess.Popen([path])
+    runfile = os.path.join(dir, executable)
+    print("Trying to run build: {}...".format(runfile))
+    if(os.path.exists(runfile)):
+        process = subprocess.Popen([runfile])
     return
 
 config = None
@@ -114,16 +112,17 @@ def refresh():
         data.append(item_data)
     return render_template('tables.template.html', data=data, config=config)
 
-@flask_app.route('/execute=<folder>')
+@flask_app.route('/run=<folder>')
 def execute(folder : str):
     dir = os.path.join(os.path.curdir, 'data', folder)
     if(os.path.isdir(dir)):
         runfile = os.path.join(dir,'.run')
+        print('Trying to find .run file: {}'.format(runfile))
         if(os.path.isfile(runfile)):
-            exe = readfile(runfile)[0]
-            runBuild(dir, exe)
-    return
-
+            exe = readfile(runfile)[0].rstrip()
+            runBuild(os.path.abspath(dir), exe)
+            return "OK!"
+    return "ERROR"
 
 @flask_app.route('/request=<folder>')
 def request(folder : str):
