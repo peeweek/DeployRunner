@@ -120,8 +120,9 @@ def execute(folder : str):
 
 @flask_app.route('/request=<folder>')
 def request(folder : str):
-    if reserve_dir(folder):
-        return "OK"
+    uufolder = "{}-{}".format(folder, randomShortStr())
+    if reserve_dir(uufolder):
+        return uufolder
     else:
         return "ERROR"
 
