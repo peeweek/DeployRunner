@@ -1,4 +1,4 @@
-import os, io, sys, yaml, threading, subprocess, time, webbrowser
+import os, io, sys, yaml, threading, subprocess, time, socket
 import shutil
 import uuid
 
@@ -15,8 +15,9 @@ if not os.path.isdir(root):
     os.makedirs(root)
 
 class FTPThread(threading.Thread):
-    def __init__(self, port : int):
+    def __init__(self, address : str, port : int):
        self.authorizer = DummyAuthorizer()
+       self.address = address
        self.port = port
        home = os.path.join(os.path.curdir,'data')
        self.authorizer.add_anonymous(homedir=home , perm='elradfmwM')
@@ -26,7 +27,7 @@ class FTPThread(threading.Thread):
        print("Starting FTP Server on port {}...".format(self.port))
        self.handler = FTPHandler
        self.handler.authorizer = self.authorizer
-       self.address = ('localhost', self.port)
+       self.address = (self.address, self.port)
        self.server = FTPServer(self.address, self.handler)
        print("FTP Started !")
        self.server.serve_forever()
@@ -78,8 +79,14 @@ config = None
 with open("config.yml", encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
 
+hostname = socket.gethostname()
+ip_address = socket.gethostbyname(hostname)
+if "ip-address" in config :
+    ip_address = config['ip-address']
+
+
 flask_app = Flask(__name__, static_folder='./static', template_folder='./templates')
-server = make_server(host='127.0.0.1', port=int(config['http-port']), app=flask_app)
+server = make_server(host=ip_address, port=int(config['http-port']), app=flask_app)
 
 def cleanup():
     root = os.path.join(os.path.curdir,'data')
@@ -146,10 +153,9 @@ def shutdownServer():
 if(__name__ == '__main__'):
     #cleanup()
 
-    ftp = FTPThread(int(config['ftp-port']))
+    ftp = FTPThread(ip_address, int(config['ftp-port']))
     ftp.start()
 
-    #webbrowser.open("http://127.0.0.1:{}".format(config['http-port']))
     print("Running HTTP Server....")
     server.serve_forever()
     print("Server Terminated, Bye !")

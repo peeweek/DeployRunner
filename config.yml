@@ -1,3 +1,8 @@
+# Application Name : Will be displayed at top of the Web page
 app-name : "Deploy Runner"
+# IP Address used to be bound to FTP and HTTP Servers, uncomment and use in order to force one interface
+# ip-address: "192.168.0.100"
+# Port that will be used for the HTTP Server
 http-port : 8017
+# Port that will be used for the FTP Server
 ftp-port: 8021
