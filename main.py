@@ -67,7 +67,13 @@ process = None
 def runBuild(dir:str, executable:str):
     runfile = os.path.join(dir, executable)
     print("Trying to run build: {}...".format(runfile))
+
     if(os.path.exists(runfile)):
+        if (platform.system() == 'Linux'):
+            print("Linux : Making file executable...".format(executable))
+            # Linux : make executable if not already
+            subprocess.run(['chmod +x {}'.format(runfile)], shell=True)
+
         process = subprocess.Popen([runfile])
     return
 
@@ -126,7 +132,7 @@ def execute(folder : str):
     if(os.path.isdir(dir)):
         runfile = os.path.join(dir,'.run')
         print('Trying to find .run file: {}'.format(runfile))
-        if(os.path.isfile(runfile)):
+        if(os.path.exists(runfile)):
             exe = readfile(runfile)[0].rstrip()
             runBuild(os.path.abspath(dir), exe)
             return "OK!"
