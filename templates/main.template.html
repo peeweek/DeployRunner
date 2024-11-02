@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ config['app-name'] }}</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css' ) }}">
 </head>
-<body style="font-family: arial, sans-serif, helvetica; ">
+<body>
 <script>
     function request()
     {
@@ -72,24 +73,26 @@
     }
 
 </script>
-<h1>{{ config['app-name'] }}</h1>
-
-<div style="border : none; background-color : #EEE;  border-radius: 8px; margin:8px; padding: 8px; width: 400px;">
-   Request Folder:<input type="text" id="folderRequest" value="toto"/><br/>
-    <button onclick="request()">Request</button><br/>
-    <div style="border : solid 1px black; border-radius: 8px; margin:8px; padding: 8px; ">
-        <span id="credentials"></span>
+<header>
+    <div class="title"><h1>{{ config['app-name'] }}</h1></div>
+    <spacer></spacer>
+    <div class="sysInfo">
+        <span style="font-size: 22px; font-weight:bold;">{{ data['hostname'] }}</span><br/>
+        {{ data['ip'] }} <br/>
+        {{ data['system'] }}
     </div>
-</div>
-<br/>
-<span id="message"></span>
-<br/>
-<div style="border : none; background-color : #EEE; border-radius: 8px; margin:8px; padding: 8px; width: 400px;">
-    <button onclick="refresh()">Refresh</button><br/>
-</div>
-<div id="runnerTables">
-
-</div>
+</header>
+<main>
+    <div class="flexArea">
+        <div style="display:flex; flex-direction: row; justify-content: space-between;">
+            <div><b>Deployed Builds:</b></div>
+            <div><span id="message" style="flex-grow:1;"></span></div>
+            <div><button onclick="refresh()">Refresh</button></div>
+        </div>
+        <br/>
+        <div class="runnerTables" id="runnerTables"></div>
+    </div>
+</main>
 
 </body>
 <script defer>

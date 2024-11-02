@@ -1,7 +1,6 @@
-import os, io, sys, yaml, threading, subprocess, time, socket, datetime
+import os, platform, yaml, threading, subprocess, time, socket, datetime
+import platform
 import shutil
-import uuid
-
 from flask import Flask, Response, request, render_template
 from werkzeug.serving import make_server
 
@@ -77,11 +76,20 @@ config = None
 with open("config.yml", encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
 
+
 hostname = socket.gethostname()
-ip_address = socket.gethostbyname(hostname)
+ip_address = '127.0.0.1'
 if "ip-address" in config :
     ip_address = config['ip-address']
+else:
+    ip_address = socket.gethostbyname(hostname) #does not work with multiple interfaces
+print("Configured Host IP Address as {}. \n\n If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address))
 
+data = {}
+
+data['hostname'] = hostname
+data['ip'] = ip_address
+data['system'] = platform.system()
 
 flask_app = Flask(__name__, static_folder='./static', template_folder='./templates')
 server = make_server(host=ip_address, port=int(config['http-port']), app=flask_app)
@@ -95,7 +103,7 @@ def cleanup():
 
 @flask_app.route('/')
 def default_route():
-    return render_template('main.template.html', config=config)
+    return render_template('main.template.html', config=config, data=data)
 
 @flask_app.route('/refresh')
 def refresh():
@@ -155,7 +163,8 @@ if(__name__ == '__main__'):
     ftp = FTPThread(ip_address, int(config['ftp-port']))
     ftp.start()
 
-    print("Running HTTP Server....")
+    print("HTTP Server Running, access in browser using http://{}:{}/".format(ip_address, config['http-port']))
+    print("In order to close servers, please press Ctrl+C (possibly multiple times)")
     server.serve_forever()
     print("Server Terminated, Bye !")
     ftp.stopServer()

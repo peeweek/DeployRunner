@@ -1,0 +1,91 @@
+body
+{
+    font-family: arial, sans-serif, helvetica;
+    color: #EEE;
+    background-color: #333;
+    padding: 0px;
+    margin: 0px;
+}
+
+header
+{
+    width:100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap:nowrap;
+    justify-content:space-between;
+    background-color: #456;
+    box-shadow: #000 0px 4px 4px;
+}
+
+header .title
+{
+    padding-left: 24px;
+}
+
+spacer
+{
+    flex-grow: 1;
+}
+
+header .sysInfo
+{
+    font-size:12px;
+    padding: 16px;
+    text-align: right;
+}
+
+main
+{
+    width:100%
+    padding: 16px;
+    padding-left: 220px;
+    padding-right: 220px;
+    display:flex;
+    flex-direction:row;
+    justify-content: center;
+}
+
+main .flexArea
+{
+    flex-grow:1;
+    padding-top: 24px;
+    min-width: 640px;
+    max-width: 1280px;
+}
+
+main .runnerTables
+{
+    width:100%;
+}
+
+.runnerTables table
+{
+    width: 100%;
+    border: none;
+    font-size:12px;
+}
+
+.runnerTables table .header
+{
+    text-align:left;
+    background-color:#444;
+    margin: 0px;"
+}
+.runnerTables table .header th
+{
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+button
+{
+    border:none;
+    background-color: #666;
+    color: white;
+    border-radius: 4px;
+    padding: 4px;
+}
+
