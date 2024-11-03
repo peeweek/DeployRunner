@@ -62,7 +62,7 @@ def reserve_dir(dir : str):
         os.makedirs(reserve_path)
         return True
 
-process = None
+run_process = None
 
 def runBuild(dir:str, executable:str):
     runfile = os.path.join(dir, executable)
@@ -74,7 +74,7 @@ def runBuild(dir:str, executable:str):
             # Linux : make executable if not already
             subprocess.run(['chmod +x {}'.format(runfile)], shell=True)
 
-        process = subprocess.Popen([runfile])
+        run_process = subprocess.Popen([runfile])
     return
 
 config = None
@@ -92,7 +92,6 @@ else:
 print("Configured Host IP Address as {}. \n\n If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address))
 
 data = {}
-
 data['hostname'] = hostname
 data['ip'] = ip_address
 data['system'] = platform.system()
@@ -114,7 +113,7 @@ def default_route():
 @flask_app.route('/refresh')
 def refresh():
     root = os.path.join(os.path.curdir,'data')
-    data = list()
+    builddata = []
     for item in os.listdir(root):
         item_data = {}
         item_data['name'] = item
@@ -123,8 +122,8 @@ def refresh():
         if os.path.exists(runfile):
             exename = readfile(runfile)[0]
             item_data['executable'] = exename
-        data.append(item_data)
-    return render_template('tables.template.html', data=data, config=config)
+        builddata.append(item_data)
+    return render_template('tables.template.html', builddata=builddata, config=config)
 
 @flask_app.route('/run=<folder>')
 def execute(folder : str):
@@ -145,6 +144,28 @@ def request(folder : str):
         return uufolder
     else:
         return "ERROR"
+
+
+@flask_app.route("/list")
+def buildlist():
+    strout = ""
+    root = os.path.join(os.path.curdir,'data')
+    for item in os.listdir(root):
+        strout = strout.join(item+'\n')
+    return strout
+
+
+@flask_app.route("/info")
+def hostinfo():
+    return hostname+ "\n" + ip_address + "\n" + platform.system()
+
+@flask_app.route("/runinfo")
+def runinfo():
+    if run_process == None :
+        return "No running process"
+    else:
+        return  str(run_process)
+
 
 @flask_app.route('/delete=<folder>')
 def delete(folder : str):
