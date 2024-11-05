@@ -287,6 +287,10 @@ public class DeployRunner
                 System = response[2];
                 Reachable = true;
             }
+            else if (response[0].Contains("timed out"))
+            {
+                Reachable = false;
+            }
         }
         catch (Exception e)
         {
@@ -321,10 +325,13 @@ public class DeployRunner
         catch (WebException e)
         {
             Debug.LogException(e);
+            return e.Message;
         }
         catch (Exception e)
         {
             Debug.LogException(e);
+            return e.Message;
+
         }
         return string.Empty;
     }
