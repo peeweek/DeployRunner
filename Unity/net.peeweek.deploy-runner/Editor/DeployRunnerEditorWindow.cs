@@ -20,7 +20,7 @@ public class DeployRunnerEditorWindow : EditorWindow
     {
         LoadHostInfos();
         this.titleContent = Contents.title;
-        Refresh(-1,true);
+        RefreshAll(false);
         EditorApplication.update += PeriodicUpdate;
     }
 
@@ -37,7 +37,7 @@ public class DeployRunnerEditorWindow : EditorWindow
         if (nextRefreshTime == 0.0 || t > nextRefreshTime)
         {
             nextRefreshTime = t + 12.0;
-            Refresh();
+            RefreshAll();
         }
     }
 
@@ -51,29 +51,28 @@ public class DeployRunnerEditorWindow : EditorWindow
     int addNewHostHTTPPort = 8017;
     int addNewHostFTPPort = 8021;
 
-    void Refresh(int index = -1, bool force = false)
+    void RefreshAll(bool force = false)
     {
-        if (index == -1)
+        for(int i = 0; i < m_HostInfos.Count; i++)
         {
-            foreach (var info in m_HostInfos)
-            {
-                var host = info.Host;
-                if(m_CachedRunners.ContainsKey(host) && m_CachedRunners[host].Reachable || force)
-                    QueryHostAlive(info);
-            }
-        }
-        else
-        {
-            var host = m_HostInfos[index].Host;
-            if (m_CachedRunners.ContainsKey(host) && m_CachedRunners[host].Reachable || force)
-                QueryHostAlive(m_HostInfos[index]);
-        }
-
-        if (m_SelectedRunnerBuilds != null)
-        {
-            m_SelectedRunnerBuilds = m_CachedRunners[m_HostInfos[selected].Host].ListBuilds();
+            Refresh(i, force);
         }
     }
+
+    void Refresh(int index, bool force = false)
+    {
+        var host = m_HostInfos[index].Host;
+        if (m_CachedRunners.ContainsKey(host) && m_CachedRunners[host].Reachable || force)
+        {
+            QueryHostAlive(m_HostInfos[index]);
+
+            if (m_SelectedRunnerBuilds != null)
+            {
+                m_SelectedRunnerBuilds = m_CachedRunners[m_HostInfos[selected].Host].ListBuilds();
+            }
+        }
+    }
+
 
 
     private void OnGUI()
@@ -81,7 +80,7 @@ public class DeployRunnerEditorWindow : EditorWindow
         using (new GUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             if (GUILayout.Button("Refresh", EditorStyles.toolbarButton))
-                Refresh(-1, true);
+                RefreshAll(true);
 
             GUILayout.FlexibleSpace();
             GUILayout.Button(EditorGUIUtility.IconContent("Profiler.NetworkMessages"), EditorStyles.toolbarButton);
@@ -98,6 +97,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                     string host = hostInfo.Host;
 
                     GUIContent label = new GUIContent($"??? ({host})");
+
                     if(m_CachedRunners.ContainsKey(hostInfo.Host))
                     {
                         var runner = m_CachedRunners[hostInfo.Host];
@@ -182,7 +182,16 @@ public class DeployRunnerEditorWindow : EditorWindow
             {
                 var hostInfo = m_HostInfos[selected];
 
-                if (!m_CachedRunners.ContainsKey(hostInfo.Host) || m_CachedRunners[hostInfo.Host].Reachable == false)
+                if (!m_CachedRunners.ContainsKey(hostInfo.Host))
+                {
+                    GUILayout.Label(hostInfo.Host, Styles.H1);
+                    GUILayout.Label("Host Status UNKNOWN (Not reached yet?), Please click Refresh to attempt connection.");
+                    if (GUILayout.Button("Refresh", GUILayout.Width(200)))
+                    {
+                        Refresh(selected, true);
+                    }
+                }     
+                else if(m_CachedRunners[hostInfo.Host].Reachable == false)
                 {
                     GUILayout.Label(hostInfo.Host, Styles.H1);
                     GUILayout.Label("HOST OFFLINE : Check connectivity, then click Refresh to retry manually");
@@ -299,7 +308,9 @@ public class DeployRunnerEditorWindow : EditorWindow
 
             if (!m_CachedRunners.ContainsKey(info.Host))
             {
-                m_CachedRunners.Add(info.Host, new DeployRunner(info));
+                var dr = new DeployRunner(info);
+                dr.DefaultTimeout = 400;
+                m_CachedRunners.Add(info.Host, dr);
             }
 
             m_CachedRunners[info.Host].UpdateHostInfo();

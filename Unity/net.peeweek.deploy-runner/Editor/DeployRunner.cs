@@ -22,6 +22,8 @@ public class DeployRunner
 
     HostInfo hostInfo;
 
+    public int DefaultTimeout = 1000;
+
     public string HostName { get; private set; }
     public string System { get; private set; }
     public bool Reachable { get; private set; }
@@ -278,7 +280,7 @@ public class DeployRunner
         string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/info";
         try
         {
-            var response = GetHTTPRequest(uri, timeout: 1000).Split("\n");
+            var response = GetHTTPRequest(uri, timeout: 500).Split("\n");
             if (response.Length == 3)
             {
                 HostName =  response[0];
@@ -299,7 +301,7 @@ public class DeployRunner
     /// </summary>
     /// <param name="uri"></param>
     /// <returns></returns>
-    string GetHTTPRequest(string uri, int timeout=5000)
+    string GetHTTPRequest(string uri, int timeout=-1)
     {
         //Debug.Log($"GetHTTPRequest: {uri} ...");
         try
@@ -307,6 +309,9 @@ public class DeployRunner
             ServicePointManager.DefaultConnectionLimit = 32;
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.Method = "GET";
+
+            if(timeout < 0)
+                timeout = DefaultTimeout;
             request.Timeout = timeout;
             var response = (HttpWebResponse)request.GetResponse();
             Stream stream = response.GetResponseStream();
