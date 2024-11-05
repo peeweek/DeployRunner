@@ -162,7 +162,7 @@ def buildlist():
     strout = ""
     root = os.path.join(os.path.curdir,'data')
     for item in os.listdir(root):
-        strout = strout.join(item+'\n')
+        strout = strout + "{}\n".format(item)
     return strout
 
 
