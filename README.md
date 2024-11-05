@@ -26,10 +26,10 @@ OR ANYTHING RELATED TO MISUSE OF THIS SOFTWARE.
 
 Preqrequisites:
 - Clone this git repo or download a release
-- Install Python (on windows make sure you add it to path
+- Install Python (on windows make sure you add it to path)
 
 On Linux:
-= Use install_linux.sh script
+- Use install_linux.sh script
 - Run using run.sh script
 
 On Windows
