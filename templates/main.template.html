@@ -23,6 +23,18 @@
         xhttp.send();
     }
 
+    function kill()
+    {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               displayMessage(xhttp.responseText)
+            }
+        };
+        xhttp.open("GET", "kill", true);
+        xhttp.send();
+    }
+
 
     function refresh()
     {
@@ -33,8 +45,20 @@
                document.getElementById("runnerTables").innerHTML = xhttp.responseText;
             }
         };
-        xhttp.open("GET", "refresh", true);
+
+        xhttp.open("GET", "html_refresh", true);
         xhttp.send();
+
+        var xhttp2 = new XMLHttpRequest();
+        xhttp2.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               // Typical action to be performed when the document is ready:
+               document.getElementById("runinfo").innerHTML = xhttp2.responseText;
+            }
+        };
+        xhttp2.open("GET", "html_runinfo", true);
+        xhttp2.send();
+
     }
 
     function run(name)
@@ -90,7 +114,10 @@
             <div><button onclick="refresh()">Refresh</button></div>
         </div>
         <br/>
+        <div id="runinfo"></div>
+        <br/>
         <div class="runnerTables" id="runnerTables"></div>
+
     </div>
 </main>
 

@@ -1,6 +1,8 @@
 import os, platform, yaml, threading, subprocess, time, socket, datetime
 import platform
 import shutil
+from subprocess import Popen
+
 from flask import Flask, Response, request, render_template
 from werkzeug.serving import make_server
 
@@ -62,7 +64,7 @@ def reserve_dir(dir : str):
         os.makedirs(reserve_path)
         return True
 
-run_process = None
+run_process : Popen = None
 
 def runBuild(dir:str, executable:str):
     runfile = os.path.join(dir, executable)
@@ -74,8 +76,8 @@ def runBuild(dir:str, executable:str):
             # Linux : make executable if not already
             subprocess.run(['chmod +x {}'.format(runfile)], shell=True)
 
-        run_process = subprocess.Popen([runfile])
-    return
+        global run_process
+        run_process  = subprocess.Popen([runfile])
 
 config = None
 
@@ -110,8 +112,17 @@ def cleanup():
 def default_route():
     return render_template('main.template.html', config=config, data=data)
 
-@flask_app.route('/refresh')
-def refresh():
+@flask_app.route('/html_runinfo')
+def htmlruninfo():
+    if run_process == None or run_process.poll() is not None :
+        return ""
+    else:
+        exe = run_process.args[0]
+        pid = run_process.pid
+        return  render_template('runinfo.template.html', exe=exe, pid=pid)
+
+@flask_app.route('/html_refresh')
+def htmlrefresh():
     root = os.path.join(os.path.curdir,'data')
     builddata = []
     for item in os.listdir(root):
@@ -161,11 +172,22 @@ def hostinfo():
 
 @flask_app.route("/runinfo")
 def runinfo():
-    if run_process == None :
+    if run_process == None or run_process.poll() is not None :
         return "No running process"
     else:
-        return  str(run_process)
+        exe = run_process.args[0]
+        pid = run_process.pid
+        return  "Process: {}\n{}".format(exe,pid)
 
+@flask_app.route("/kill")
+def killrunninginstance():
+    if run_process == None or run_process.poll() is not None :
+        return "No running process"
+    else:
+        exe = run_process.args[0]
+        pid = run_process.pid
+        run_process.kill()
+        return  "Killed process : {} (PID:{})".format(exe,pid)
 
 @flask_app.route('/delete=<folder>')
 def delete(folder : str):
