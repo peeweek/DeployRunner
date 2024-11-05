@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Policy;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using static DeployRunner;
-using static PlasticGui.LaunchDiffParameters;
 
 public class DeployRunnerEditorWindow : EditorWindow
 {
@@ -61,16 +61,22 @@ public class DeployRunnerEditorWindow : EditorWindow
 
     void Refresh(int index, bool force = false)
     {
-        var host = m_HostInfos[index].Host;
+        var host = m_HostInfos[index].HostIP;
         if (m_CachedRunners.ContainsKey(host) && m_CachedRunners[host].Reachable || force)
         {
             QueryHostAlive(m_HostInfos[index]);
 
             if (m_SelectedRunnerBuilds != null)
             {
-                m_SelectedRunnerBuilds = m_CachedRunners[m_HostInfos[selected].Host].ListBuilds();
+                m_SelectedRunnerBuilds = m_CachedRunners[m_HostInfos[selected].HostIP].ListBuilds();
             }
         }
+    }
+
+    void ConnectProfiler(string ip)
+    {
+        ProfilerDriver.DirectIPConnect(ip);
+        ProfilerDriver.enabled = true;
     }
 
 
@@ -94,27 +100,30 @@ public class DeployRunnerEditorWindow : EditorWindow
                 for (int i = 0; i < m_HostInfos.Count; i++)
                 {
                     var hostInfo = m_HostInfos[i];
-                    string host = hostInfo.Host;
+                    string hostIP = hostInfo.HostIP;
 
-                    GUIContent label = new GUIContent($"??? ({host})");
+                    GUIContent label = new GUIContent($"({hostIP}) UNKNOWN", Contents.iconDisabled.image);
 
-                    if(m_CachedRunners.ContainsKey(hostInfo.Host))
+                    if(m_CachedRunners.ContainsKey(hostInfo.HostIP))
                     {
-                        var runner = m_CachedRunners[hostInfo.Host];
+                        var runner = m_CachedRunners[hostInfo.HostIP];
                         if(runner.Reachable)
                         {
-                            label.text = $"{runner.HostName} ({host})";
+                            label.text = $"{runner.HostName} ({hostIP}) ONLINE";
+                            label.image = Contents.iconConnected.image;
                         }
                         else
                         {
-                            label.text = $"{runner.HostName} ({host}) OFFLINE";
+                            label.text = $"{runner.HostName} ({hostIP}) OFFLINE";
+                            label.image = Contents.iconDisconnected.image;
+
                         }
                     }
 
                     if (GUILayout.Button(label, Styles.FlatButton))
                     {
                         selected = i;
-                        addNewHostIP = hostInfo.Host;
+                        addNewHostIP = hostInfo.HostIP;
                         addNewHostHTTPPort = hostInfo.HTTPPort;
                         addNewHostFTPPort = hostInfo.FTPPort;
 
@@ -144,7 +153,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                     {
                         this.m_HostInfos.Add(new DeployRunner.HostInfo()
                         {
-                            Host = this.addNewHostIP,
+                            HostIP = this.addNewHostIP,
                             HTTPPort = addNewHostHTTPPort,
                             FTPPort = addNewHostFTPPort,
                         });
@@ -158,7 +167,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                     if (GUILayout.Button("Edit Selected"))
                     {
                         var hostinfo = m_HostInfos[selected];
-                        hostinfo.Host = this.addNewHostIP;
+                        hostinfo.HostIP = this.addNewHostIP;
                         hostinfo.HTTPPort = addNewHostHTTPPort;
                         hostinfo.FTPPort = addNewHostFTPPort;
                         m_HostInfos[selected] = hostinfo;
@@ -182,18 +191,18 @@ public class DeployRunnerEditorWindow : EditorWindow
             {
                 var hostInfo = m_HostInfos[selected];
 
-                if (!m_CachedRunners.ContainsKey(hostInfo.Host))
+                if (!m_CachedRunners.ContainsKey(hostInfo.HostIP))
                 {
-                    GUILayout.Label(hostInfo.Host, Styles.H1);
-                    GUILayout.Label("Host Status UNKNOWN (Not reached yet?), Please click Refresh to attempt connection.");
-                    if (GUILayout.Button("Refresh", GUILayout.Width(200)))
+                    GUILayout.Label(new GUIContent(hostInfo.HostIP, Contents.iconBigDisabled.image), Styles.H1);
+                    GUILayout.Label("Host Status UNKNOWN (Not reached yet?)\nPlease click Retry to attempt connection anew.");
+                    if (GUILayout.Button("Retry Connection", GUILayout.Width(200)))
                     {
                         Refresh(selected, true);
                     }
                 }     
-                else if(m_CachedRunners[hostInfo.Host].Reachable == false)
+                else if(m_CachedRunners[hostInfo.HostIP].Reachable == false)
                 {
-                    GUILayout.Label(hostInfo.Host, Styles.H1);
+                    GUILayout.Label(new GUIContent(hostInfo.HostIP, Contents.iconBigDisconnected.image), Styles.H1);
                     GUILayout.Label("HOST OFFLINE : Check connectivity, then click Refresh to retry manually");
                     if(GUILayout.Button("Refresh", GUILayout.Width(200)))
                     {
@@ -203,17 +212,17 @@ public class DeployRunnerEditorWindow : EditorWindow
                 else // Runner is Alive
                 {
 
-                    var runner = m_CachedRunners[hostInfo.Host];
+                    var runner = m_CachedRunners[hostInfo.HostIP];
 
                     using(new GUILayout.HorizontalScope(GUILayout.ExpandWidth(true)))
                     {
                         using(new GUILayout.VerticalScope())
                         {
-                            GUILayout.Label(runner.HostName.ToUpper(), Styles.H1);
-                            GUILayout.Label($"{hostInfo.Host} ({runner.System})");
-                            if (GUILayout.Button($"http://{hostInfo.Host}:{hostInfo.HTTPPort}", GUILayout.ExpandWidth(false)))
+                            GUILayout.Label(new GUIContent(runner.HostName, Contents.iconBigConnected.image), Styles.H1);
+                            GUILayout.Label($"{hostInfo.HostIP} ({runner.System})");
+                            if (GUILayout.Button($"http://{hostInfo.HostIP}:{hostInfo.HTTPPort}", GUILayout.ExpandWidth(false)))
                             {
-                                Application.OpenURL($"http://{hostInfo.Host}:{hostInfo.HTTPPort}");
+                                Application.OpenURL($"http://{hostInfo.HostIP}:{hostInfo.HTTPPort}");
                             }
                         }
                         GUILayout.FlexibleSpace();
@@ -244,14 +253,23 @@ public class DeployRunnerEditorWindow : EditorWindow
                         {
                             GUILayout.Label("Currently Running Build", Styles.H2);
                             GUILayout.Label($"{runner.BuildRunningExecutable} (PID:{runner.BuildRunningPID})");
-                            if(GUILayout.Button("Kill Process"))
+                            using (new GUILayout.HorizontalScope())
                             {
-                                if(EditorUtility.DisplayDialog("Kill Remote Process?", $"Do you want to kill the running instance on {runner.HostName}? ", "Yes", "No"))
+                                if (GUILayout.Button("Kill Process", GUILayout.Width(120)))
                                 {
-                                    runner.KillRunningProcess();
-                                    RefreshWithDelay(0.1);
+                                    if (EditorUtility.DisplayDialog("Kill Remote Process?", $"Do you want to kill the running instance on {runner.HostName}? ", "Yes", "No"))
+                                    {
+                                        runner.KillRunningProcess();
+                                        RefreshWithDelay(0.2);
+                                    }
                                 }
+                                if (GUILayout.Button("Connect Profiler", GUILayout.Width(120)))
+                                {
+                                    ConnectProfiler(hostInfo.HostIP);
+                                }
+
                             }
+
                             GUILayout.Space(8);
                         }
 
@@ -283,7 +301,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                                 }
                                 if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(64)))
                                 {
-                                    if (EditorUtility.DisplayDialog("Deploy Runner", $"Are you sure you want to delete the build on host {runner.HostName} ({hostInfo.Host}) ? \n\n Build Name :\n {build} \n\nThis operation cannot be undone.", "Yes, Proceed with Delete", "No"))
+                                    if (EditorUtility.DisplayDialog("Deploy Runner", $"Are you sure you want to delete the build on host {runner.HostName} ({hostInfo.HostIP}) ? \n\n Build Name :\n {build} \n\nThis operation cannot be undone.", "Yes, Proceed with Delete", "No"))
                                         runner.Delete(build);
 
 
@@ -304,17 +322,17 @@ public class DeployRunnerEditorWindow : EditorWindow
     {
         try
         {
-            EditorUtility.DisplayProgressBar("Deploy Runner", $"Getting information on Host :{info.Host} ...", 0.2f);
+            EditorUtility.DisplayProgressBar("Deploy Runner", $"Getting information on Host :{info.HostIP} ...", 0.2f);
 
-            if (!m_CachedRunners.ContainsKey(info.Host))
+            if (!m_CachedRunners.ContainsKey(info.HostIP))
             {
                 var dr = new DeployRunner(info);
                 dr.DefaultTimeout = 400;
-                m_CachedRunners.Add(info.Host, dr);
+                m_CachedRunners.Add(info.HostIP, dr);
             }
 
-            m_CachedRunners[info.Host].UpdateHostInfo();
-            m_CachedRunners[info.Host].UpdateIsRunningBuild();
+            m_CachedRunners[info.HostIP].UpdateHostInfo();
+            m_CachedRunners[info.HostIP].UpdateIsRunningBuild();
         }
         catch(Exception e)
         {
@@ -325,7 +343,7 @@ public class DeployRunnerEditorWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        return m_CachedRunners[info.Host].Reachable;
+        return m_CachedRunners[info.HostIP].Reachable;
     }
 
 
@@ -338,7 +356,7 @@ public class DeployRunnerEditorWindow : EditorWindow
         info = new DeployRunner.HostInfo();
         foreach(var i in m_HostInfos)
         {
-            if(i.Host == ip)
+            if(i.HostIP == ip)
             {
                 info = i;
                 return true;
@@ -372,7 +390,7 @@ public class DeployRunnerEditorWindow : EditorWindow
             var values = item.Split(';');
             var hostInfo = new DeployRunner.HostInfo()
             {
-                Host = values[0],
+                HostIP = values[0],
                 HTTPPort = int.Parse(values[1]),
                 FTPPort = int.Parse(values[2]),
             };
@@ -386,7 +404,7 @@ public class DeployRunnerEditorWindow : EditorWindow
         List<string> items = new List<string>();
         foreach(var hostInfo in hostInfos)
         {
-            items.Add($"{hostInfo.Host};{hostInfo.HTTPPort};{hostInfo.FTPPort}");
+            items.Add($"{hostInfo.HostIP};{hostInfo.HTTPPort};{hostInfo.FTPPort}");
         }
         return string.Join("|", items.ToArray());
     }
@@ -396,7 +414,7 @@ public class DeployRunnerEditorWindow : EditorWindow
         var list = new List<DeployRunner.HostInfo>();
         list.Add(new DeployRunner.HostInfo()
         {
-            Host = "127.0.0.1",
+            HostIP = "127.0.0.1",
             HTTPPort = 8017,
             FTPPort = 8021
         });
@@ -411,11 +429,26 @@ public class DeployRunnerEditorWindow : EditorWindow
     {
         public static GUIContent title;
 
+        public static GUIContent iconConnected;
+        public static GUIContent iconDisconnected;
+        public static GUIContent iconDisabled;
+
+        public static GUIContent iconBigConnected;
+        public static GUIContent iconBigDisconnected;
+        public static GUIContent iconBigDisabled;
 
         static Contents()
         {
             var icon = EditorGUIUtility.IconContent("Profiler.NetworkMessages");
             title = new GUIContent("Deploy Runner", icon.image);
+
+            iconConnected = EditorGUIUtility.IconContent("CacheServerConnected");
+            iconDisconnected = EditorGUIUtility.IconContent("CacheServerDisconnected");
+            iconDisabled = EditorGUIUtility.IconContent("CacheServerDisabled");
+
+            iconBigConnected = EditorGUIUtility.IconContent("CacheServerConnected@2x");
+            iconBigDisconnected = EditorGUIUtility.IconContent("CacheServerDisconnected@2x");
+            iconBigDisabled = EditorGUIUtility.IconContent("CacheServerDisabled@2x");
         }
     }
 

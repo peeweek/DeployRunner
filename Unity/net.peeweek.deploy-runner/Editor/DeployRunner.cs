@@ -15,7 +15,7 @@ public class DeployRunner
     [Serializable]
     public struct HostInfo
     {
-        public string Host;
+        public string HostIP;
         public int HTTPPort;
         public int FTPPort;
     }
@@ -97,7 +97,7 @@ public class DeployRunner
             }
 
             // Upload Build
-            var ftp = new FTP($"{this.hostInfo.Host}:{this.hostInfo.FTPPort}", "anonymous", $"anonymous@{SystemInfo.deviceName}");
+            var ftp = new FTP($"{this.hostInfo.HostIP}:{this.hostInfo.FTPPort}", "anonymous", $"anonymous@{SystemInfo.deviceName}");
 
             EditorUtility.DisplayProgressBar("DeployRunner", $"Create Directory Structure...", 0f);
 
@@ -138,7 +138,7 @@ public class DeployRunner
     {
         try
         {
-            string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/delete={build}";
+            string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/delete={build}";
             var result = GetHTTPRequest(uri);
             if (result != "OK")
             {
@@ -166,7 +166,7 @@ public class DeployRunner
             if (string.IsNullOrEmpty(build))
                 build = temporaryUUID;
 
-            string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/run={build}";
+            string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/run={build}";
             var result = GetHTTPRequest(uri);
             if (result != "OK!")
             {
@@ -190,7 +190,7 @@ public class DeployRunner
     {
         BuildRunningExecutable = string.Empty;
         BuildRunningPID = -1;
-        string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/runinfo";
+        string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/runinfo";
         var result = GetHTTPRequest(uri);
         if(result != "No running process")
         {
@@ -214,7 +214,7 @@ public class DeployRunner
     {
         if(IsBuildRunning)
         {
-            string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/kill";
+            string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/kill";
             var result = GetHTTPRequest(uri);
         }
     }
@@ -226,7 +226,7 @@ public class DeployRunner
     /// <returns></returns>
     public string[] ListBuilds()
     {
-        string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/list";
+        string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/list";
         var result = GetHTTPRequest(uri);
         var split = result.Split('\n').ToList();
         split.RemoveAll(o => string.IsNullOrEmpty(o));
@@ -247,7 +247,7 @@ public class DeployRunner
         try
         {
             name = ReplaceInvalidFileNameCharacters(name, "_");
-            string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/request={name}";
+            string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/request={name}";
             EditorUtility.DisplayProgressBar("DeployRunner", $"Trying to Communicate with {uri} ...", 0.1f);
             var result = GetHTTPRequest(uri);
 
@@ -277,13 +277,13 @@ public class DeployRunner
     /// </summary>
     public void UpdateHostInfo()
     {
-        string uri = $"http://{this.hostInfo.Host}:{this.hostInfo.HTTPPort}/info";
+        string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/info";
         try
         {
             var response = GetHTTPRequest(uri, timeout: 500).Split("\n");
             if (response.Length == 3)
             {
-                HostName =  response[0];
+                HostName =  response[0].ToUpper();
                 System = response[2];
                 Reachable = true;
             }

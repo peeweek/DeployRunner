@@ -8,7 +8,7 @@ public class DeployRunnerProcessor : BuildProcessor
 {
     public DeployRunner.HostInfo hostInfo = new DeployRunner.HostInfo()
     {
-        Host = "192.168.0.100",
+        HostIP = "192.168.0.100",
         FTPPort = 8021,
         HTTPPort = 8017,
     };
