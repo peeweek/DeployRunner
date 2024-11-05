@@ -1,0 +1,24 @@
+{
+    "name": "DeployRunner-Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1c4091910c47e0b4a9990b23b1da68ee"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "net.peeweek.build-frontend",
+            "expression": "2.0.0",
+            "define": "BUILD_FRONTEND"
+        }
+    ],
+    "noEngineReferences": false
+}

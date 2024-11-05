@@ -1,0 +1,13 @@
+{
+  "name": "net.peeweek.deploy-runner",
+  "displayName": "Deploy Runner (Client)",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "Deploy Runner Client, to be used with the DeployRunner server. Uploads and runs builds on remote systems, like on console devkits.",
+  "type": "tool",
+  "hideInEditor": false,
+  "author": {
+    "name": "PeeWeeK.NET",
+    "url": "https://github.com/peeweek/"
+  }
+}
