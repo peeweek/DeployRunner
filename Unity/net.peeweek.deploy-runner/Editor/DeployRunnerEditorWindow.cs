@@ -70,7 +70,18 @@ public class DeployRunnerEditorWindow : EditorWindow
 
             if (m_SelectedRunnerBuilds != null)
             {
-                m_SelectedRunnerBuilds = m_CachedRunners[m_HostInfos[selected].HostIP].ListBuilds();
+                m_SelectedRunnerBuilds.Clear();
+                var runner = m_CachedRunners[m_HostInfos[selected].HostIP];
+                var builds = runner.ListBuilds();
+                foreach(var build in builds)
+                {
+                    m_SelectedRunnerBuilds.Add(new BuildInfo()
+                    {
+                        name = build,
+                        description = runner.GetDescription(build)
+                    });
+
+                }
             }
         }
     }
@@ -253,7 +264,7 @@ public class DeployRunnerEditorWindow : EditorWindow
 
                     GUILayout.Space(24);
 
-                    if (m_SelectedRunnerBuilds.Length > 0)
+                    if (m_SelectedRunnerBuilds.Count > 0)
                     {
                         if(runner.IsBuildRunning)
                         {
@@ -284,8 +295,8 @@ public class DeployRunnerEditorWindow : EditorWindow
 
                         using (new GUILayout.HorizontalScope(EditorStyles.toolbar, GUILayout.ExpandWidth(true), GUILayout.Height(24)))
                         {
-                            GUILayout.Label("Build Name", Styles.Header, GUILayout.ExpandWidth(true));
-                            GUILayout.FlexibleSpace();
+                            GUILayout.Label("Build Name", Styles.Header, GUILayout.Width(200));
+                            GUILayout.Label("Description", Styles.Header, GUILayout.ExpandWidth(true));
                             GUILayout.Label("Run", Styles.Header, GUILayout.Width(64));
                             GUILayout.Label("Delete", Styles.Header, GUILayout.Width(64));
                         }
@@ -298,17 +309,18 @@ public class DeployRunnerEditorWindow : EditorWindow
                         {
                             using (new GUILayout.HorizontalScope(EditorStyles.toolbar, GUILayout.ExpandWidth(true)))
                             {
-                                GUILayout.Label(build, Styles.ToolbarLabel, GUILayout.ExpandWidth(false));
-                                GUILayout.FlexibleSpace();
+                                GUILayout.Label(build.name, Styles.ToolbarLabel, GUILayout.Width(200));
+                                GUILayout.Label(build.description, Styles.ToolbarLabel, GUILayout.ExpandWidth(true));
+
                                 if (GUILayout.Button("▶", EditorStyles.toolbarButton, GUILayout.Width(64)))
                                 {
-                                    runner.Run(build);
+                                    runner.Run(build.name);
                                     RefreshWithDelay(0.1);
                                 }
                                 if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(64)))
                                 {
                                     if (EditorUtility.DisplayDialog("Deploy Runner", $"Are you sure you want to delete the build on host {runner.HostName} ({hostInfo.HostIP}) ? \n\n Build Name :\n {build} \n\nThis operation cannot be undone.", "Yes, Proceed with Delete", "No"))
-                                        runner.Delete(build);
+                                        runner.Delete(build.name);
 
 
                                 }
@@ -322,8 +334,13 @@ public class DeployRunnerEditorWindow : EditorWindow
 
 
     Dictionary<string, DeployRunner> m_CachedRunners = new Dictionary<string, DeployRunner>();
-    string[] m_SelectedRunnerBuilds = new string[0];
+    List<BuildInfo> m_SelectedRunnerBuilds = new List<BuildInfo>();
 
+    struct BuildInfo
+    {
+        public string name;
+        public string description;
+    }
     bool QueryHostAlive(DeployRunner.HostInfo info)
     {
         try
