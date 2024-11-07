@@ -57,10 +57,31 @@ public class DeployRunner
         // Create .run file and upload it
         string runFilePath = Path.Combine(path, ".run");
 
+
+        return WriteFileWithContents(runFilePath, executableName);
+    }
+
+    public bool CreateDescFile(string path, string description)
+    {
+        // Create .desc file and upload it
+        string descFilePath = Path.Combine(path, ".desc");
+
+        return WriteFileWithContents(descFilePath, description);
+    }
+
+
+    /// <summary>
+    /// Internal : Writes a text file with string contents
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="contents"></param>
+    /// <returns>whether it succeeded</returns>
+    bool WriteFileWithContents(string file, string contents)
+    {
         try
         {
-            var sw = File.CreateText(runFilePath);
-            sw.WriteLine(executableName);
+            var sw = File.CreateText(file);
+            sw.WriteLine(contents);
             sw.Close();
         }
         catch (Exception e)
@@ -264,6 +285,19 @@ public class DeployRunner
         }
 
         return this.temporaryUUID;
+    }
+
+
+    /// <summary>
+    /// Queries the server about build description
+    /// </summary>
+    /// <param name="uuid"></param>
+    /// <returns></returns>
+    public string GetDescription(string uuid)
+    {
+        string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/builddesc={uuid}";
+        var result = GetHTTPRequest(uri);
+        return result;
     }
 
 

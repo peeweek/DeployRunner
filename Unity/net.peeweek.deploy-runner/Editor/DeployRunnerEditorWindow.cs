@@ -51,6 +51,8 @@ public class DeployRunnerEditorWindow : EditorWindow
     int addNewHostHTTPPort = 8017;
     int addNewHostFTPPort = 8021;
 
+    string description = "(No Description)";
+
     void RefreshAll(bool force = false)
     {
         for(int i = 0; i < m_HostInfos.Count; i++)
@@ -226,7 +228,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                             }
                         }
                         GUILayout.FlexibleSpace();
-                        using(new GUILayout.HorizontalScope(GUILayout.Width(90)))
+                        using(new GUILayout.VerticalScope(GUILayout.Width(190)))
                         {
                             if(GUILayout.Button("Upload", GUILayout.Height(40)))
                             {
@@ -238,10 +240,14 @@ public class DeployRunnerEditorWindow : EditorWindow
                                     var exewe = Path.GetFileNameWithoutExtension(path);
                                     var uuid = runner.Request(exewe);
                                     runner.CreateRunFile(folder, exe);
+                                    runner.CreateDescFile(folder, description);
                                     runner.UploadBuildDirectory(folder);
                                     RefreshWithDelay(0.1);
                                 }
                             }
+                            GUILayout.Space(12);
+                            GUILayout.Label("Description:");
+                            this.description = GUILayout.TextField(this.description);
                         }
                     }
 

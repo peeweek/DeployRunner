@@ -129,6 +129,10 @@ def htmlrefresh():
         item_data = {}
         item_data['name'] = item
         item_data['description'] = '(No Description)'
+        descfile = os.path.join(root,item,'.desc')
+        if os.path.exists(descfile):
+            desc = readfile(descfile)[0]
+            item_data['description'] = desc
         runfile = os.path.join(root,item,'.run')
         if os.path.exists(runfile):
             exename = readfile(runfile)[0]
@@ -147,6 +151,18 @@ def execute(folder : str):
             runBuild(os.path.abspath(dir), exe)
             return "OK!"
     return "ERROR"
+
+@flask_app.route('/builddesc=<folder>')
+def builddesc(folder : str):
+    dir = os.path.join(os.path.curdir, 'data', folder)
+    if(os.path.isdir(dir)):
+        descfile = os.path.join(dir,'.desc')
+        print('Trying to find .desc file: {}'.format(descfile))
+        if(os.path.exists(descfile)):
+            desc = readfile(descfile)[0].rstrip()
+            return desc
+    return "(No Description)"
+
 
 @flask_app.route('/request=<folder>')
 def request(folder : str):
