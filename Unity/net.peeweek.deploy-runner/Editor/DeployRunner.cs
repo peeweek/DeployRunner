@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using System.Linq;
-using static PlasticGui.LaunchDiffParameters;
 using System.Text.RegularExpressions;
 
 public class DeployRunner
