@@ -364,9 +364,7 @@ public class DeployRunner
         {
             Debug.LogException(e);
             return e.Message;
-
         }
-        return string.Empty;
     }
 
     /// <summary>
