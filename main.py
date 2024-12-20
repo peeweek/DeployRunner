@@ -69,15 +69,23 @@ run_process : Popen = None
 def runBuild(dir:str, executable:str):
     runfile = os.path.join(dir, executable)
     print("Trying to run build: {}...".format(runfile))
-
+    env = os.environ.copy()
     if(os.path.exists(runfile)):
         if (platform.system() == 'Linux'):
-            print("Linux : Making file executable...".format(executable))
             # Linux : make executable if not already
+            print("Linux : Making file executable...".format(executable))
             subprocess.run(['chmod +x {}'.format(runfile)], shell=True)
+            if(executable.endswith(".exe")):
+                # Try to run with a Wine
+                print("Windows EXE : Running with WINE !")
+                runfile = "/usr/bin/wine {}".format(runfile)
+                # if wine-prefix is configured in config :
+                if 'wine-prefix' in config:
+                    print("Using WINEPREFIX={}".format(config['wine-prefix']))
+                    env['WINEPREFIX']=config['wine-prefix']
 
         global run_process
-        run_process  = subprocess.Popen([runfile])
+        run_process  = subprocess.Popen(runfile.split(" "), env=env)
 
 config = None
 
