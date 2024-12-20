@@ -10,6 +10,18 @@ using static DeployRunner;
 
 public class DeployRunnerEditorWindow : EditorWindow
 {
+    string LastUploadPath
+    {
+        get 
+        {
+            return EditorPrefs.GetString($"DeployRunnerPath-{Application.productName}", Directory.GetParent(Application.dataPath).FullName);
+        }
+        set
+        {
+            EditorPrefs.SetString($"DeployRunnerPath-{Application.productName}", value);
+        }
+    }
+
     [MenuItem("File/Deploy Runner", priority =220)]
     static void Open()
     {
@@ -22,6 +34,8 @@ public class DeployRunnerEditorWindow : EditorWindow
         this.titleContent = Contents.title;
         RefreshAll(false);
         EditorApplication.update += PeriodicUpdate;
+
+
     }
 
     private void OnDisable()
@@ -50,6 +64,7 @@ public class DeployRunnerEditorWindow : EditorWindow
     string addNewHostIP = "192.168.0.1";
     int addNewHostHTTPPort = 8017;
     int addNewHostFTPPort = 8021;
+    string addNewHostPassword = "";
 
     string description = "(No Description)";
 
@@ -93,6 +108,8 @@ public class DeployRunnerEditorWindow : EditorWindow
     }
 
 
+    Vector2 HostScroll;
+    Vector2 BuildsScroll;
 
     private void OnGUI()
     {
@@ -102,13 +119,15 @@ public class DeployRunnerEditorWindow : EditorWindow
                 RefreshAll(true);
 
             GUILayout.FlexibleSpace();
-            GUILayout.Button(EditorGUIUtility.IconContent("Profiler.NetworkMessages"), EditorStyles.toolbarButton);
+            GUILayout.Button(EditorGUIUtility.IconContent("_Popup"), EditorStyles.toolbarButton);
         }
         using (new GUILayout.HorizontalScope(GUILayout.ExpandHeight(true)))
         {
             using (new GUILayout.VerticalScope(GUILayout.Width(280), GUILayout.ExpandHeight(true)))
             {
                 GUILayout.Label("Hosts", Styles.Header);
+
+                HostScroll = GUILayout.BeginScrollView(HostScroll);
 
                 for (int i = 0; i < m_HostInfos.Count; i++)
                 {
@@ -139,6 +158,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                         addNewHostIP = hostInfo.HostIP;
                         addNewHostHTTPPort = hostInfo.HTTPPort;
                         addNewHostFTPPort = hostInfo.FTPPort;
+                        addNewHostPassword = hostInfo.Password;
 
                         Refresh(i, false);
                     }
@@ -148,27 +168,29 @@ public class DeployRunnerEditorWindow : EditorWindow
                         EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), new Color(gray, gray, gray, 0.1f));
                     }
                 }
-
+                
+                GUILayout.EndScrollView();
                 GUILayout.FlexibleSpace();
-                Rect rect = GUILayoutUtility.GetLastRect();
-                EditorGUI.DrawRect(rect, Color.red);
-
+                
                 using(new GUILayout.VerticalScope(EditorStyles.helpBox))
                 {
                     EditorGUIUtility.labelWidth = 80;
-                    GUILayout.Label("Add new Host:", EditorStyles.boldLabel);
+                    GUILayout.Label("Host settings:", EditorStyles.boldLabel);
                     this.addNewHostIP = EditorGUILayout.TextField("IP", addNewHostIP);
                     this.addNewHostHTTPPort = EditorGUILayout.IntField("HTTP Port", addNewHostHTTPPort);
                     this.addNewHostFTPPort = EditorGUILayout.IntField("FTP Port", addNewHostFTPPort);
+                    this.addNewHostPassword = EditorGUILayout.PasswordField("Password", this.addNewHostPassword);
 
-                    
-                    if (GUILayout.Button("Add New"))
+                    using(new GUILayout.HorizontalScope())
+                    {
+                    if (GUILayout.Button("Add"))
                     {
                         this.m_HostInfos.Add(new DeployRunner.HostInfo()
                         {
                             HostIP = this.addNewHostIP,
                             HTTPPort = addNewHostHTTPPort,
                             FTPPort = addNewHostFTPPort,
+                            Password = addNewHostPassword,
                         });
                         this.addNewHostIP = "192.168.0.1";
                         this.addNewHostHTTPPort = 8017;
@@ -177,21 +199,24 @@ public class DeployRunnerEditorWindow : EditorWindow
                     }
 
                     EditorGUI.BeginDisabledGroup(selected == -1);
-                    if (GUILayout.Button("Edit Selected"))
+                    if (GUILayout.Button("Edit"))
                     {
                         var hostinfo = m_HostInfos[selected];
                         hostinfo.HostIP = this.addNewHostIP;
                         hostinfo.HTTPPort = addNewHostHTTPPort;
                         hostinfo.FTPPort = addNewHostFTPPort;
+                        hostinfo.Password = addNewHostPassword;
                         m_HostInfos[selected] = hostinfo;
                         SaveHostInfos();
                     }
-                    if (GUILayout.Button("Delete Selected"))
+                    if (GUILayout.Button("Delete"))
                     {
                         m_HostInfos.RemoveAt(selected);
                         selected = m_HostInfos.Count == 0 ? -1 : Mathf.Clamp(selected -1, 0, m_HostInfos.Count-1);
                         SaveHostInfos();
                     }
+                    }
+
 
                     EditorGUI.EndDisabledGroup();
                 }
@@ -243,12 +268,12 @@ public class DeployRunnerEditorWindow : EditorWindow
                         {
                             if(GUILayout.Button("Upload", GUILayout.Height(40)))
                             {
-                                string path = EditorUtility.OpenFilePanelWithFilters("Select your executable file.", Application.dataPath, new string[] { "Executable Files", "exe,run,x86_64", "Any File", "*"});
-                                if(File.Exists(path))
+                                LastUploadPath = EditorUtility.OpenFilePanelWithFilters("Select your executable file.", LastUploadPath, new string[] { "Executable Files", "exe,run,x86_64", "Any File", "*"});
+                                if(File.Exists(LastUploadPath))
                                 {
-                                    var folder = Path.GetDirectoryName(path);
-                                    var exe = Path.GetFileName(path);
-                                    var exewe = Path.GetFileNameWithoutExtension(path);
+                                    var folder = Path.GetDirectoryName(LastUploadPath);
+                                    var exe = Path.GetFileName(LastUploadPath);
+                                    var exewe = Path.GetFileNameWithoutExtension(LastUploadPath);
                                     var uuid = runner.Request(exewe);
                                     runner.CreateRunFile(folder, exe);
                                     runner.CreateDescFile(folder, description);
@@ -301,6 +326,8 @@ public class DeployRunnerEditorWindow : EditorWindow
                             GUILayout.Label("Delete", Styles.Header, GUILayout.Width(64));
                         }
 
+                        BuildsScroll = GUILayout.BeginScrollView(BuildsScroll);
+
                         r = GUILayoutUtility.GetLastRect();
                         r.height = 1;
                         EditorGUI.DrawRect(r, new Color(0, 0, 0, 1));
@@ -321,11 +348,11 @@ public class DeployRunnerEditorWindow : EditorWindow
                                 {
                                     if (EditorUtility.DisplayDialog("Deploy Runner", $"Are you sure you want to delete the build on host {runner.HostName} ({hostInfo.HostIP}) ? \n\n Build Name :\n {build} \n\nThis operation cannot be undone.", "Yes, Proceed with Delete", "No"))
                                         runner.Delete(build.name);
-
-
                                 }
                             }
                         }
+
+                        GUILayout.EndScrollView();
                     }
                 }
             }
@@ -400,7 +427,20 @@ public class DeployRunnerEditorWindow : EditorWindow
 
     public void SaveHostInfos()
     {
-        EditorPrefs.SetString("DeployRunner.HostInfoList", PackPrefString(m_HostInfos));
+        var prefString = PackPrefString(m_HostInfos);
+        //Debug.Log(prefString);
+        EditorPrefs.SetString("DeployRunner.HostInfoList",prefString);
+    }
+
+    public static string Base64Encode(string plainText) 
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return System.Convert.ToBase64String(plainTextBytes);
+    }    
+    public static string Base64Decode(string base64EncodedData) 
+    {
+        var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+        return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
     }
 
     List<DeployRunner.HostInfo> UnpackPrefString(string prefString)
@@ -416,6 +456,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                 HostIP = values[0],
                 HTTPPort = int.Parse(values[1]),
                 FTPPort = int.Parse(values[2]),
+                Password = values.Length == 4 ? Base64Decode(values[3]) : ""
             };
             hostInfos.Add(hostInfo);
         }
@@ -427,7 +468,7 @@ public class DeployRunnerEditorWindow : EditorWindow
         List<string> items = new List<string>();
         foreach(var hostInfo in hostInfos)
         {
-            items.Add($"{hostInfo.HostIP};{hostInfo.HTTPPort};{hostInfo.FTPPort}");
+            items.Add($"{hostInfo.HostIP};{hostInfo.HTTPPort};{hostInfo.FTPPort};{Base64Encode(hostInfo.Password)}");
         }
         return string.Join("|", items.ToArray());
     }
@@ -439,7 +480,8 @@ public class DeployRunnerEditorWindow : EditorWindow
         {
             HostIP = "127.0.0.1",
             HTTPPort = 8017,
-            FTPPort = 8021
+            FTPPort = 8021,
+            Password = ""
         });
 
         return PackPrefString(list);

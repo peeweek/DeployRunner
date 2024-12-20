@@ -17,6 +17,7 @@ public class DeployRunner
         public string HostIP;
         public int HTTPPort;
         public int FTPPort;
+        public string Password;
     }
 
     HostInfo hostInfo;
