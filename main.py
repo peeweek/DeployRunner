@@ -83,7 +83,11 @@ def runBuild(dir:str, executable:str):
             if(executable.endswith(".exe")):
                 # Try to run with a Wine
                 print("Windows EXE : Running with WINE !")
-                runfile = "/usr/bin/wine {}".format(runfile)
+                winepath = "/usr/bin/wine"
+                if 'wine-custom' in config:
+                    print("Running with Custom WINE : {}".format(config['wine-custom']))
+                    winepath = config['wine-custom']
+                runfile = "{} {}".format(winepath, runfile)
                 # if wine-prefix is configured in config :
                 if 'wine-prefix' in config:
                     print("Using WINEPREFIX={}".format(config['wine-prefix']))
