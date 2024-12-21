@@ -1,0 +1,8 @@
+#!/usr/bin/env xdg-open
+	[Desktop Entry]
+	Name=DeployRunner
+	Exec=/home/deck/DeployRunner/run.sh
+	Path=/home/deck/DeployRunner/
+	Terminal=true
+	Type=Application
+	StartupNotify=false
