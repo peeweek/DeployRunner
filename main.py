@@ -16,12 +16,17 @@ if not os.path.isdir(root):
     os.makedirs(root)
 
 class FTPThread(threading.Thread):
-    def __init__(self, address : str, port : int):
+    def __init__(self, address : str, port : int, password: str):
        self.authorizer = DummyAuthorizer()
        self.address = address
        self.port = port
        home = os.path.join(os.path.curdir,'data')
-       self.authorizer.add_anonymous(homedir=home , perm='elradfmwM')
+       if(password == ""):
+           print("Creating FTP Server in anonymous mode...")
+           self.authorizer.add_anonymous(homedir=home , perm='elradfmwM')
+       else:
+           print("Creating FTP Server with deployrunner user and password... ")
+           self.authorizer.add_user(username='deployrunner', password=password, homedir=home, perm='elradfmwM')
        super(FTPThread, self).__init__()
 
     def run(self):
@@ -189,7 +194,6 @@ def buildlist():
         strout = strout + "{}\n".format(item)
     return strout
 
-
 @flask_app.route("/info")
 def hostinfo():
     return hostname+ "\n" + ip_address + "\n" + platform.system()
@@ -233,7 +237,11 @@ def shutdownServer():
 if(__name__ == '__main__'):
     #cleanup()
 
-    ftp = FTPThread(ip_address, int(config['ftp-port']))
+    ftppasswd = ''
+    if 'ftp-password' in config:
+        ftppasswd = config['ftp-password']
+
+    ftp = FTPThread(ip_address, int(config['ftp-port']),ftppasswd)
     ftp.start()
 
     print("HTTP Server Running, access in browser using http://{}:{}/".format(ip_address, config['http-port']))

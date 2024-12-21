@@ -6,5 +6,7 @@ app-name : "📦 Deploy Runner"
 http-port : 8017
 # Port that will be used for the FTP Server
 ftp-port: 8021
+# Password for FTP Server (user : deployrunner) uncomment for use in non-anonymous
+# ftp-password: deploypassword
 # Wine Prefix (linux only): uncomment to use a custom wine prefix (default ~/.wine/ will be used if left commented
 #wine-prefix: /path/to/your/wine/prefix
