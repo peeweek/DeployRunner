@@ -171,7 +171,7 @@ public class DeployRunnerEditorWindow : EditorWindow
                 
                 GUILayout.EndScrollView();
                 GUILayout.FlexibleSpace();
-                
+
                 using(new GUILayout.VerticalScope(EditorStyles.helpBox))
                 {
                     EditorGUIUtility.labelWidth = 80;
@@ -277,8 +277,17 @@ public class DeployRunnerEditorWindow : EditorWindow
                                     var uuid = runner.Request(exewe);
                                     runner.CreateRunFile(folder, exe);
                                     runner.CreateDescFile(folder, description);
-                                    runner.UploadBuildDirectory(folder);
-                                    RefreshWithDelay(0.1);
+                                    bool upload = runner.UploadBuildDirectory(folder);
+                                    if(upload)
+                                    {
+                                        RefreshWithDelay(0.1);
+                                    }
+                                    else
+                                    {
+                                        runner.Delete(folder);
+                                        RefreshWithDelay(1.0);
+                                    }
+
                                 }
                             }
                             GUILayout.Space(12);
@@ -326,11 +335,11 @@ public class DeployRunnerEditorWindow : EditorWindow
                             GUILayout.Label("Delete", Styles.Header, GUILayout.Width(64));
                         }
 
-                        BuildsScroll = GUILayout.BeginScrollView(BuildsScroll);
-
                         r = GUILayoutUtility.GetLastRect();
                         r.height = 1;
                         EditorGUI.DrawRect(r, new Color(0, 0, 0, 1));
+
+                        BuildsScroll = GUILayout.BeginScrollView(BuildsScroll);
 
                         foreach (var build in m_SelectedRunnerBuilds)
                         {
@@ -397,7 +406,7 @@ public class DeployRunnerEditorWindow : EditorWindow
     }
 
 
-    #region HOST INFORMATION
+    #region HOSTINFO
 
     List<DeployRunner.HostInfo> m_HostInfos;
 

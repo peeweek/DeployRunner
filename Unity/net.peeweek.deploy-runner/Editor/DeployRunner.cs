@@ -118,7 +118,16 @@ public class DeployRunner
             }
 
             // Upload Build
-            var ftp = new FTP($"{this.hostInfo.HostIP}:{this.hostInfo.FTPPort}", "anonymous", $"anonymous@{SystemInfo.deviceName}");
+            string user = "anonymous";
+            string password = $"anonymous@{SystemInfo.deviceName}";
+
+            if (!string.IsNullOrEmpty(this.hostInfo.Password))
+            {
+                user = "deployrunner";
+                password = this.hostInfo.Password;
+            }
+
+            var ftp = new FTP($"{this.hostInfo.HostIP}:{this.hostInfo.FTPPort}", user, password);
 
             EditorUtility.DisplayProgressBar("DeployRunner", $"Create Directory Structure...", 0f);
 
