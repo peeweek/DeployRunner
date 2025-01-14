@@ -92,6 +92,9 @@ def runBuild(dir:str, executable:str):
                 if 'wine-prefix' in config:
                     print("Using WINEPREFIX={}".format(config['wine-prefix']))
                     env['WINEPREFIX']=config['wine-prefix']
+            if 'mangohud' in config and config['mangohud'] == True:
+                print("Enabling MangoHUD")
+                env['MANGOHUD']='1'
 
         global run_process
         run_process  = subprocess.Popen(runfile.split(" "), env=env)

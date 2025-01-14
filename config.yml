@@ -1,14 +1,16 @@
 # Application Name : Will be displayed at top of the Web page
 app-name : "📦 Deploy Runner"
-# IP Address used to be bound to FTP and HTTP Servers, uncomment and use in order to force one interface
+# ---- IP Address used to be bound to FTP and HTTP Servers, uncomment and use in order to force one interface
 # ip-address: "192.168.0.100"
-# Port that will be used for the HTTP Server
+# ---- Port that will be used for the HTTP Server
 http-port : 8017
-# Port that will be used for the FTP Server
+# ---- Port that will be used for the FTP Server
 ftp-port: 8021
-# Password for FTP Server (user : deployrunner) uncomment for use in non-anonymous
+# ---- Password for FTP Server (user : deployrunner) uncomment for use in non-anonymous
 # ftp-password: deploypassword
-# Wine Prefix (linux only): uncomment to use a custom wine prefix (default ~/.wine/ will be used if left commented
+# ---- Wine Prefix (linux only): uncomment to use a custom wine prefix (default ~/.wine/ will be used if left commented
 # wine-prefix: /path/to/your/custom/wine/prefix
-# Custom Wine Runner (linux only): uncomment to use a custom wine binary (eg: soda, proton, wine-GE, ...), if commented will try to run the default wine installed
+# ---- Custom Wine Runner (linux only): uncomment to use a custom wine binary (eg: soda, proton, wine-GE, ...), if commented will try to run the default wine installed
 # wine-custom: /path/to/your/custom/wine/runner/bin/wine
+# ---- Linux Only : adds mangohud to environment, must be installed, vulkan only
+# mangohud: True
