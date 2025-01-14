@@ -101,6 +101,10 @@ def runBuild(dir:str, executable:str):
 
 config = None
 
+if not os.path.exists("config.yml"):
+    print("WARNING : Config file (config.yml) not found, creating one from default template (config.default)...")
+    shutil.copyfile("config.default", "config.yml")
+
 with open("config.yml", encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
 

@@ -2,7 +2,7 @@
 .venv
 data
 __pycache__
-
+config.yml
 
 
 vkd3d*
