@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Text;
 using System.IO;
 using System.Net;
 using UnityEditor;
@@ -8,6 +9,9 @@ using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Drawing.Imaging;
+using System.Security.Policy;
+using System.Buffers.Text;
 
 public class DeployRunner
 {
@@ -185,11 +189,24 @@ public class DeployRunner
         return true;
     }
 
+
+
+    /// <summary>
+    /// Formats the args string as a URL-compatible base64 string
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    static string EncodeArgsURL(string args)
+    {
+        var bytes = Encoding.UTF8.GetBytes(args);
+        return Convert.ToBase64String(bytes).Replace('+','-').Replace('/','_').Replace('=','.');
+    }
+
     /// <summary>
     /// Runs a build remotely
     /// </summary>
     /// <returns></returns>
-    public bool Run(string build = "")
+    public bool Run(string build = "", string args = "")
     {
         try
         {
@@ -197,6 +214,10 @@ public class DeployRunner
                 build = temporaryUUID;
 
             string uri = $"http://{this.hostInfo.HostIP}:{this.hostInfo.HTTPPort}/run={build}";
+            if(!string.IsNullOrEmpty(args))
+            {
+                uri += $"&args={EncodeArgsURL(args)}";
+            }
             var result = GetHTTPRequest(uri);
             if (result != "OK!")
             {

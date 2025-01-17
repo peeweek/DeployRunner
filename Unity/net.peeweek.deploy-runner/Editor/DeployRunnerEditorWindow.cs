@@ -67,6 +67,7 @@ public class DeployRunnerEditorWindow : EditorWindow
     string addNewHostPassword = "";
 
     string description = "(No Description)";
+    string runArguments = "";
 
     void RefreshAll(bool force = false)
     {
@@ -293,6 +294,9 @@ public class DeployRunnerEditorWindow : EditorWindow
                             GUILayout.Space(12);
                             GUILayout.Label("Description:");
                             this.description = GUILayout.TextField(this.description);
+                            GUILayout.Label("Run Arguments:");
+                            this.runArguments = GUILayout.TextField(this.runArguments);
+
                         }
                     }
 
@@ -350,7 +354,7 @@ public class DeployRunnerEditorWindow : EditorWindow
 
                                 if (GUILayout.Button("▶", EditorStyles.toolbarButton, GUILayout.Width(64)))
                                 {
-                                    runner.Run(build.name);
+                                    runner.Run(build.name, this.runArguments);
                                     RefreshWithDelay(0.1);
                                 }
                                 if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(64)))
