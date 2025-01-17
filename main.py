@@ -1,4 +1,5 @@
-import os, platform, yaml, threading, subprocess, time, socket, datetime
+import base64
+import os, urllib, yaml, threading, subprocess, time, socket, datetime
 import platform
 import shutil
 from subprocess import Popen
@@ -69,9 +70,12 @@ def reserve_dir(dir : str):
         os.makedirs(reserve_path)
         return True
 
+def decodeArgs( argsb64:str):
+    return base64.b64decode(argsb64.replace("-","+").replace("_","/").replace(".","=")).decode("utf-8")
+
 run_process : Popen = None
 
-def runBuild(dir:str, executable:str):
+def runBuild(dir:str, executable:str, args:str):
     runfile = os.path.join(dir, executable)
     print("Trying to run build: {}...".format(runfile))
     env = os.environ.copy()
@@ -97,6 +101,12 @@ def runBuild(dir:str, executable:str):
                 env['MANGOHUD']='1'
 
         global run_process
+
+        ## Process arguments
+        if args != "":
+            print("Running with arguments : {}".format(args))
+            runfile = "{} {}".format(runfile, args)
+
         run_process  = subprocess.Popen(runfile.split(" "), env=env)
 
 config = None
@@ -172,9 +182,23 @@ def execute(folder : str):
         print('Trying to find .run file: {}'.format(runfile))
         if(os.path.exists(runfile)):
             exe = readfile(runfile)[0].rstrip()
-            runBuild(os.path.abspath(dir), exe)
+            runBuild(os.path.abspath(dir), exe, "")
             return "OK!"
     return "ERROR"
+
+@flask_app.route('/run=<folder>&args=<args>')
+def executeWithArgs(folder : str, args: str):
+    dir = os.path.join(os.path.curdir, 'data', folder)
+    if(os.path.isdir(dir)):
+        runfile = os.path.join(dir,'.run')
+        print('Trying to find .run file: {}'.format(runfile))
+        if(os.path.exists(runfile)):
+            exe = readfile(runfile)[0].rstrip()
+            runBuild(os.path.abspath(dir), exe, decodeArgs(args))
+            return "OK!"
+    return "ERROR"
+
+
 
 @flask_app.route('/builddesc=<folder>')
 def builddesc(folder : str):

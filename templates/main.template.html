@@ -61,6 +61,13 @@
 
     }
 
+    function base64URLencode(str)
+    {
+          const utf8Arr = new TextEncoder().encode(str);
+          const base64Encoded = btoa(utf8Arr);
+          return base64Encoded.replace('+', '-').replace('/', '_').replace('=', '.');
+    }
+
     function run(name)
     {
         var xhttp = new XMLHttpRequest();
@@ -70,7 +77,19 @@
                 displayMessage("Running Build : " + name + " !")
             }
         };
-        xhttp.open("GET", "run="+name, true);
+
+        var args = document.getElementById("runargs").value
+        if(args == "")
+        {
+            xhttp.open("GET", "run="+name, true);
+        }
+        else
+        {
+            alert(args)
+            var encodedArgs =  base64URLencode(args);
+            xhttp.open("GET", "run="+name+"&args="+encodedArgs);
+        }
+
         xhttp.send();
     }
 
@@ -115,6 +134,8 @@
         </div>
         <br/>
         <div id="runinfo"></div>
+        <br/>
+        <div>Run with Arguments : <input id="runargs"></input></div>
         <br/>
         <div class="runnerTables" id="runnerTables"></div>
 
