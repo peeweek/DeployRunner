@@ -2,6 +2,7 @@ import base64
 import os, urllib, yaml, threading, subprocess, time, socket, datetime
 import platform
 import shutil
+import logging
 from subprocess import Popen
 
 from flask import Flask, Response, request, render_template
@@ -16,6 +17,15 @@ root = os.path.join(os.path.curdir,'data')
 if not os.path.isdir(root):
     os.makedirs(root)
 
+
+## Log Levels
+## 0 = CRITICAL, 1 = ERROR,  2 = INTENT, 3 = INFO, 4 = VERBOSE, 5 = DEBUG
+loglevel:int = 5
+
+def log(message : str, level : int = 3):
+    if level <= loglevel :
+        print(message)
+
 class FTPThread(threading.Thread):
     def __init__(self, address : str, port : int, password: str):
        self.authorizer = DummyAuthorizer()
@@ -23,24 +33,24 @@ class FTPThread(threading.Thread):
        self.port = port
        home = os.path.join(os.path.curdir,'data')
        if(password == ""):
-           print("Creating FTP Server in anonymous mode...")
+           log("Creating FTP Server in anonymous mode...",2)
            self.authorizer.add_anonymous(homedir=home , perm='elradfmwM')
        else:
-           print("Creating FTP Server with deployrunner user and password... ")
+           log("Creating FTP Server with deployrunner user and password... ",2)
            self.authorizer.add_user(username='deployrunner', password=password, homedir=home, perm='elradfmwM')
        super(FTPThread, self).__init__()
 
     def run(self):
-       print("Starting FTP Server on port {}...".format(self.port))
+       log("Starting FTP Server on port {}...".format(self.port))
        self.handler = FTPHandler
        self.handler.authorizer = self.authorizer
        self.address = (self.address, self.port)
        self.server = FTPServer(self.address, self.handler)
-       print("FTP Started !")
+       log("FTP Started !")
        self.server.serve_forever()
 
     def stopServer(self):
-        print("Stopping FTP Server")
+        log("Stopping FTP Server")
         self.server.close_all()
         self.join()
 
@@ -59,12 +69,12 @@ def reserve_dir(dir : str):
     datapath = os.path.join(os.path.curdir,'data')
     if not os.path.exists(datapath) or not os.path.isdir(datapath):
         # Create folder
-        print('Creating Missing Root Data folder : {}'.format(datapath))
+        log('Creating Missing Root Data folder : {}'.format(datapath))
         os.makedirs(datapath)
 
     reserve_path = os.path.join(datapath, dir)
     if os.path.exists(reserve_path):
-        print("PATH ALREADY EXISTS : {}, ABORTING".format(reserve_path))
+        log("PATH ALREADY EXISTS : {}, ABORTING".format(reserve_path), 0)
         return False
     else :
         os.makedirs(reserve_path)
@@ -77,27 +87,27 @@ run_process : Popen = None
 
 def runBuild(dir:str, executable:str, args:str):
     runfile = os.path.join(dir, executable)
-    print("Trying to run build: {}...".format(runfile))
+    log("Trying to run build: {}...".format(runfile),1)
     env = os.environ.copy()
     if(os.path.exists(runfile)):
         if (platform.system() == 'Linux'):
             # Linux : make executable if not already
             print("Linux : Making file executable...".format(executable))
-            subprocess.run(['chmod +x {}'.format(runfile)], shell=True)
+            subprocess.run(['chmod +x "{}"'.format(runfile)], shell=True)
             if(executable.endswith(".exe")):
                 # Try to run with a Wine
                 print("Windows EXE : Running with WINE !")
                 winepath = "/usr/bin/wine"
                 if 'wine-custom' in config:
-                    print("Running with Custom WINE : {}".format(config['wine-custom']))
+                    log("Running with Custom WINE : {}".format(config['wine-custom']),2)
                     winepath = config['wine-custom']
-                runfile = "{} {}".format(winepath, runfile)
+                runfile = '{} {}'.format(winepath, runfile)
                 # if wine-prefix is configured in config :
                 if 'wine-prefix' in config:
-                    print("Using WINEPREFIX={}".format(config['wine-prefix']))
+                    log("Using WINEPREFIX={}".format(config['wine-prefix']),2)
                     env['WINEPREFIX']=config['wine-prefix']
             if 'mangohud' in config and config['mangohud'] == True:
-                print("Enabling MangoHUD")
+                log("Enabling MangoHUD",2)
                 env['MANGOHUD']='1'
 
         global run_process
@@ -112,11 +122,21 @@ def runBuild(dir:str, executable:str, args:str):
 config = None
 
 if not os.path.exists("config.yml"):
-    print("WARNING : Config file (config.yml) not found, creating one from default template (config.default)...")
+    log("WARNING : Config file (config.yml) not found, creating one from default template (config.default)...", 1)
     shutil.copyfile("config.default", "config.yml")
 
 with open("config.yml", encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
+
+
+if "loglevel" in config:
+    loglevel = int(config['loglevel'])
+
+print("Log level configured to {}".format(loglevel))
+
+flask_logger = logging.getLogger('werkzeug')
+if(loglevel <= 2):
+    flask_logger.setLevel(logging.ERROR);
 
 
 hostname = socket.gethostname()
@@ -125,7 +145,8 @@ if "ip-address" in config :
     ip_address = config['ip-address']
 else:
     ip_address = socket.gethostbyname(hostname) #does not work with multiple interfaces
-print("Configured Host IP Address as {}. \n\n If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address))
+
+log("Configured Host IP Address as {}. \n\n If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address),0)
 
 data = {}
 data['hostname'] = hostname
@@ -179,7 +200,7 @@ def execute(folder : str):
     dir = os.path.join(os.path.curdir, 'data', folder)
     if(os.path.isdir(dir)):
         runfile = os.path.join(dir,'.run')
-        print('Trying to find .run file: {}'.format(runfile))
+        log('Trying to find .run file: {}'.format(runfile), 5)
         if(os.path.exists(runfile)):
             exe = readfile(runfile)[0].rstrip()
             runBuild(os.path.abspath(dir), exe, "")
@@ -191,7 +212,7 @@ def executeWithArgs(folder : str, args: str):
     dir = os.path.join(os.path.curdir, 'data', folder)
     if(os.path.isdir(dir)):
         runfile = os.path.join(dir,'.run')
-        print('Trying to find .run file: {}'.format(runfile))
+        log('Trying to find .run file: {}'.format(runfile), 5)
         if(os.path.exists(runfile)):
             exe = readfile(runfile)[0].rstrip()
             runBuild(os.path.abspath(dir), exe, decodeArgs(args))
@@ -205,7 +226,7 @@ def builddesc(folder : str):
     dir = os.path.join(os.path.curdir, 'data', folder)
     if(os.path.isdir(dir)):
         descfile = os.path.join(dir,'.desc')
-        print('Trying to find .desc file: {}'.format(descfile))
+        log('Trying to find .desc file: {}'.format(descfile), 5)
         if(os.path.exists(descfile)):
             desc = readfile(descfile)[0].rstrip()
             return desc

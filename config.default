@@ -4,6 +4,8 @@ app-name : "📦 Deploy Runner"
 # ip-address: "192.168.0.100"
 # ---- Port that will be used for the HTTP Server
 http-port : 8017
+# Log Level : 0 is for critical log only, increase to increase verbosity, default : 5
+loglevel : 5
 # ---- Port that will be used for the FTP Server
 ftp-port: 8021
 # ---- Password for FTP Server (user : deployrunner) uncomment for use in non-anonymous
