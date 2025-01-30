@@ -334,7 +334,26 @@ public class DeployRunner
     private static Regex k_InvalidRegEx = new(string.Format(@"([{0}]*\.+$)|([{0}]+)", Regex.Escape(new string(Path.GetInvalidFileNameChars()))), RegexOptions.Compiled);
     public static string ReplaceInvalidFileNameCharacters(string input, string replacement = "_") => k_InvalidRegEx.Replace(input, replacement);
 
+    /// <summary>
+    /// Get string representing last known hostname for given hostInfo as EditorPrefs
+    /// </summary>
+    /// <param name="hostInfo"></param>
+    /// <returns></returns>
+    public static string GetCachedHostname(HostInfo hostInfo)
+    {
+        return EditorPrefs.GetString($"DeployRunner.HostCachedName.{hostInfo.HostIP}", "???");
+    }
 
+
+    /// <summary>
+    /// Set string representing last known hostname for given hostInfo as EditorPrefs
+    /// </summary>
+    /// <param name="hostInfo"></param>
+    /// <param name="hostname"></param>
+    public static void SetCachedHostname(HostInfo hostInfo, string hostname)
+    {
+        EditorPrefs.SetString($"DeployRunner.HostCachedName.{hostInfo.HostIP}", hostname);
+    }
 
     /// <summary>
     /// Fetches information about host
@@ -348,6 +367,7 @@ public class DeployRunner
             if (response.Length == 3)
             {
                 HostName =  response[0].ToUpper();
+                SetCachedHostname(this.hostInfo, HostName);
                 System = response[2];
                 Reachable = true;
             }

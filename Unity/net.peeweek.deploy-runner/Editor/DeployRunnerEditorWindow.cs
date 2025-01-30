@@ -135,7 +135,9 @@ public class DeployRunnerEditorWindow : EditorWindow
                     var hostInfo = m_HostInfos[i];
                     string hostIP = hostInfo.HostIP;
 
-                    GUIContent label = new GUIContent($"({hostIP}) UNKNOWN", Contents.iconDisabled.image);
+                    string cachedHostName = GetCachedHostname(hostInfo);
+
+                    GUIContent label = new GUIContent($"{cachedHostName} ({hostIP}) UNKNOWN", Contents.iconDisabled.image);
 
                     if(m_CachedRunners.ContainsKey(hostInfo.HostIP))
                     {
