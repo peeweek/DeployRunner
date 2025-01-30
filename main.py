@@ -1,5 +1,5 @@
 import base64
-import os, urllib, yaml, threading, subprocess, time, socket, datetime
+import os, urllib, yaml, threading, subprocess, time, socket, datetime, re
 import platform
 import shutil
 import logging
@@ -86,38 +86,52 @@ def decodeArgs( argsb64:str):
 run_process : Popen = None
 
 def runBuild(dir:str, executable:str, args:str):
+    runlist = []
     runfile = os.path.join(dir, executable)
     log("Trying to run build: {}...".format(runfile),1)
     env = os.environ.copy()
     if(os.path.exists(runfile)):
         if (platform.system() == 'Linux'):
             # Linux : make executable if not already
-            print("Linux : Making file executable...".format(executable))
+            log("Linux : Making file executable...".format(executable),2)
             subprocess.run(['chmod +x "{}"'.format(runfile)], shell=True)
             if(executable.endswith(".exe")):
                 # Try to run with a Wine
-                print("Windows EXE : Running with WINE !")
+                log("Windows EXE : Running with WINE !",2)
                 winepath = "/usr/bin/wine"
                 if 'wine-custom' in config:
                     log("Running with Custom WINE : {}".format(config['wine-custom']),2)
                     winepath = config['wine-custom']
-                runfile = '{} {}'.format(winepath, runfile)
+                runlist.append(winepath)
+                runlist.append(runfile)
                 # if wine-prefix is configured in config :
                 if 'wine-prefix' in config:
                     log("Using WINEPREFIX={}".format(config['wine-prefix']),2)
                     env['WINEPREFIX']=config['wine-prefix']
+            else:
+                runlist.append(runfile)
+
             if 'mangohud' in config and config['mangohud'] == True:
                 log("Enabling MangoHUD",2)
                 env['MANGOHUD']='1'
+        else : # platform.system() == 'Windows"
+            runlist.append(runfile)
 
         global run_process
 
         ## Process arguments
         if args != "":
             print("Running with arguments : {}".format(args))
-            runfile = "{} {}".format(runfile, args)
+            for arg in args :
+                runlist.append(arg)
 
-        run_process  = subprocess.Popen(runfile.split(" "), env=env)
+        if loglevel >= 4:
+            log("Running Process Arguments :", 4)
+            for item in runlist :
+                log("     - {}".format(item),4)
+
+        # Finally, run process as POpen
+        run_process  = subprocess.Popen(runlist, env=env)
 
 config = None
 
@@ -135,7 +149,7 @@ if "loglevel" in config:
 print("Log level configured to {}".format(loglevel))
 
 flask_logger = logging.getLogger('werkzeug')
-if(loglevel <= 2):
+if(loglevel <= 4):
     flask_logger.setLevel(logging.ERROR);
 
 
