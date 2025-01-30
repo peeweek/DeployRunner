@@ -1,8 +1,10 @@
 import base64
-import os, urllib, yaml, threading, subprocess, time, socket, datetime, re
+import os, yaml, threading, subprocess, time, socket, datetime, re
 import platform
 import shutil
 import logging
+import pyfiglet
+
 from subprocess import Popen
 
 from flask import Flask, Response, request, render_template
@@ -160,7 +162,9 @@ if "ip-address" in config :
 else:
     ip_address = socket.gethostbyname(hostname) #does not work with multiple interfaces
 
-log("Configured Host IP Address as {}. \n\n If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address),0)
+print("Welcome to DeployRunner!")
+print(pyfiglet.figlet_format(ip_address, font='moscow').replace('#','█'))
+log("If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address),0)
 
 data = {}
 data['hostname'] = hostname
