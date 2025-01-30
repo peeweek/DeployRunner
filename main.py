@@ -135,6 +135,9 @@ def runBuild(dir:str, executable:str, args:str):
         # Finally, run process as POpen
         run_process  = subprocess.Popen(runlist, env=env)
 
+
+print(pyfiglet.figlet_format('DeployRunner', font='smslant'))
+
 config = None
 
 if not os.path.exists("config.yml"):
@@ -143,17 +146,16 @@ if not os.path.exists("config.yml"):
 
 with open("config.yml", encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
-
+    log("Config successuflly loaded !", 1)
 
 if "loglevel" in config:
     loglevel = int(config['loglevel'])
 
-print("Log level configured to {}".format(loglevel))
+print("Log level configured to : {}".format(loglevel))
 
 flask_logger = logging.getLogger('werkzeug')
 if(loglevel <= 4):
     flask_logger.setLevel(logging.ERROR);
-
 
 hostname = socket.gethostname()
 ip_address = '127.0.0.1'
@@ -162,9 +164,9 @@ if "ip-address" in config :
 else:
     ip_address = socket.gethostbyname(hostname) #does not work with multiple interfaces
 
-print("Welcome to DeployRunner!")
+log("Hostname : {}".format(hostname),1)
 print(pyfiglet.figlet_format(ip_address, font='moscow').replace('#','█'))
-log("If this is not your IP Address associated to the wanted interface, please edit the config.yml file to specify the ip-address field.".format(ip_address),0)
+log("(If this is not the IP Address associated to the desired interface,\n please edit the config.yml file to specify the ip-address field)",2)
 
 data = {}
 data['hostname'] = hostname
@@ -319,7 +321,7 @@ if(__name__ == '__main__'):
     ftp.start()
 
     print("HTTP Server Running, access in browser using http://{}:{}/".format(ip_address, config['http-port']))
-    print("In order to close servers, please press Ctrl+C (possibly multiple times)")
+    print("\nIMPORTANT : \n==============\nTo shutdown DeployRunner, please press Ctrl+C (possibly multiple times)\n")
     server.serve_forever()
     print("Server Terminated, Bye !")
     ftp.stopServer()
