@@ -4,12 +4,13 @@ import platform
 import shutil
 import logging
 import pyfiglet
+import webbrowser
+import argparse
 
 from subprocess import Popen
 
 from flask import Flask, Response, request, render_template
 from werkzeug.serving import make_server
-
 
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
@@ -313,6 +314,12 @@ def shutdownServer():
 if(__name__ == '__main__'):
     #cleanup()
 
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--steamdeck", action='store_true')
+    args = argparser.parse_args()
+
+    steamdeck = args.steamdeck
+
     ftppasswd = ''
     if 'ftp-password' in config:
         ftppasswd = config['ftp-password']
@@ -321,6 +328,11 @@ if(__name__ == '__main__'):
     ftp.start()
 
     print("HTTP Server Running, access in browser using http://{}:{}/".format(ip_address, config['http-port']))
+
+    if(steamdeck):
+        print("Steam deck detected : Opening browser")
+        webbrowser.open("http://{}:{}/".format(ip_address, config['http-port']))
+
     print("\nIMPORTANT : \n==============\nTo shutdown DeployRunner, please press Ctrl+C (possibly multiple times)\n")
     server.serve_forever()
     print("Server Terminated, Bye !")
